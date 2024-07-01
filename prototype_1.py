@@ -13,10 +13,11 @@ def parse_file(input_filename, output_filename):
 
 
 
-os.system('sudo auditd start')
-os.system('sudo auditctl -r 1000')
+#os.system('sudo auditd start')
+#os.system('sudo auditctl -r 1000')
 os.system('touch tree_audit_process.txt')
-#os.system('sudo auditctl -a always -S fork')
+#os.system('sudo auditctl -S fork')
+os.system('sudo auditctl -a always,exit -F arch=b64 -S fork -k fork_syscall')
 os.system('sudo less /var/log/audit/audit.log > dynamic_autilog.txt')
 parse_file('dynamic_autilog.txt', 'tree_audit_process.txt')
 #while (input() != "^C"):
