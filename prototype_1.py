@@ -18,7 +18,7 @@ def parse_file(input_filename, output_filename):
                     # if ppid is new add it to the list
                     if ppid not in parent_id:
                         parent_id.append(ppid)
-                        outfile.write(str(ppid) + "\n")
+                        #outfile.write(str(ppid) + "\n")
                 #outfile.write(line)
 
 
