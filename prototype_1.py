@@ -1,4 +1,5 @@
 import os # needed for the terminal commands
+import argparse 
 import re # needed parsing using regular expressions
 import subprocess # needed for reading the terminal so we can stop the process
 
@@ -16,6 +17,7 @@ class TreeNode:
 class Tree:
     def __init__(self):
         self.nodes = {}
+        self.root = None
 
     def add_node(self, node_id, parent_id):
         new_node = TreeNode(node_id, parent_id)
@@ -27,6 +29,15 @@ class Tree:
             self.nodes[parent_id].add_child(new_node)
         else:
             raise ValueError(f"Parent with ID {parent_id} not found")
+
+        # Ensure the root is set correctly
+        self.set_root()
+
+    def set_root(self):
+        for node in self.nodes.values():
+            if node.parent_id is None:
+                self.root = node
+                break
 
     def _find(self, node, node_id):
         if node.node_id == node_id:
@@ -60,13 +71,13 @@ class Tree:
         return traversal
 
     def add_node_from_line(self, line):
-        match = re.search("ppid=(\d+)", line)
+        match = re.search(r"ppid=(\d+)", line)
         if match:
             parent_id = int(match.group(1))
         else:
             parent_id = None
 
-        match = re.search("pid=(\d+)", line)
+        match = re.search(r"pid=(\d+)", line)
         if match:
             node_id = int(match.group(1))
         else:
@@ -97,14 +108,30 @@ def parse_file(input_filename, output_filename):
 
 #os.system('sudo auditd start')
 #os.system('sudo auditctl -r 1000')
-os.system('touch tree_audit_process.txt')
+#os.system('touch tree_audit_process.txt')
 #os.system('sudo auditctl -S fork')
 #os.system('sudo auditctl -a always,exit -F arch=b64 -S clone -k clone_syscall')
-os.system('sudo less /var/log/audit/audit.log > dynamic_autilog.txt')
-parse_file('dynamic_autilog.txt', 'tree_audit_process.txt')
+#os.system('sudo less /var/log/audit/audit.log > dynamic_autilog.txt'
+
+#parse_file('dynamic_autilog.txt', 'tree_audit_process.txt')
 #while (input() != "^C"):
     # we need some code to help break out of this loop
 
     
 #os.system('sudo aureport --syscall')
 #os.system('auditd status')
+def main():
+    parser = argparse.ArgumentParser(
+                        prog='prtotype_1',
+                        description='Create process tree report from given audit log')
+    
+    parser.add_argument('-a', '--audit', dest='audit', required=True, metavar='FILE')          # positional argument
+    parser.add_argument('-o', '--outfile', dest='out', required=True, metavar='FILE')
+    #parser.add_argument('filename')           # positional argument
+    args = parser.parse_args()
+    print(args.audit)
+    print(args.out)
+    parse_file(args.audit, args.out)
+
+
+main()
