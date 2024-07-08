@@ -133,5 +133,15 @@ def main():
     print(args.out)
     parse_file(args.audit, args.out)
 
+    a = AuditLog(args.audit)
+    m100 = a.messages[100] # AuditLogMessage
+    print(m100.id)
+    for p in m100.lines: # AuditLogLine
+        print(p.type)
+        print(p.attributes)
+        if p.type == "EXECVE":
+            if "argc" in p.attributes:
+                print(p.attributes["argc"])
 
 main()
+
