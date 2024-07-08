@@ -4,23 +4,47 @@ import re # needed parsing using regular expressions
 import subprocess # needed for reading the terminal so we can stop the process
 
 # creating a data structure to keep track of the information that is being pasrsed
+class message():
+
+    def __init__(self, num, id):
+        self.id = id
+        self.num = num
+        self.lines = []
+    
+    def add_line(self, line):
+        self.lines.append(line)
+
+    def get_id(self):
+        return id
+
+
 class AuditLog():
 
     def __init__(self, file):
         self.audit_id = []
+        self.messages = {}
+        # self.attributes = {}
         #lets parse the file based on the audit ID
         with open(file, 'r') as infile:
-            for line in file:
-                match = re.search(r"msg=audit(\d)", line)
+            for line in infile:
+                match = re.search(r"msg=audit\((\d+\.\d+):(\d+)\):", line)
                 if match:
-                    if match not in self.audit_id:
-                        self.audit_id.append(match)
+                    if str(match.group(1)) not in self.audit_id:
+                        self.audit_id.append(match.group(1))
+                        # if this is a new ID adding a new id and new message to dict
+                        m = message(len(self.audit_id), match.group(1))
+                        m.add_line(line)
+                        self.messages[len(self.audit_id)] = m
+                    else:
+                        for m in self.messages:
+                            checking_message = self.messages[m]
+                            if checking_message.id == match.group(1):
+                                checking_message.add_line(line)
 
     def print_ids(self):
         for id in self.audit_id:
             print(id)
-
-
+    
     
 
 #os.system('sudo auditd start')
@@ -49,7 +73,14 @@ def main():
     print(args.audit)
     print(args.out)
     a = AuditLog(args.audit)
-    a.print_ids()
+    # a.print_ids()
+    for m in a.messages:
+        message = a.messages[m]
+        print('NEW MESSAGE \n\n\n')
+        print(message.id)
+        for p in message.lines:
+            print(p)
+
 
 
 main()
