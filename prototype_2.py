@@ -2,6 +2,7 @@ import os # needed for the terminal commands
 import argparse 
 import re # needed parsing using regular expressions
 import subprocess # needed for reading the terminal so we can stop the process
+from collections import defaultdict
 
 # creating a data structure to keep track of the information that is being pasrsed
 class message():
@@ -9,15 +10,27 @@ class message():
     def __init__(self, num, id):
         self.id = id
         self.num = num
+        self.attributes = defaultdict(list)
         self.lines = []
     
     def add_line(self, line):
         self.lines.append(line)
+        self.parse_string_to_dict(line)
 
     def get_id(self):
         return id
+    
+    def parse_string_to_dict(self, input_string):
+        # Regular expression to find key-value pairs
+        pattern = r'(\w+)\s*=\s*(\w+)'
 
-
+        # Find all matches of the pattern in the input string
+        matches = re.findall(pattern, input_string)
+        
+        # Iterate over the matches and populate the dictionary
+        for key, value in matches:
+            self.attributes[key].append(value)
+        
 class AuditLog():
 
     def __init__(self, file):
@@ -38,7 +51,7 @@ class AuditLog():
                     else:
                         for m in self.messages:
                             checking_message = self.messages[m]
-                            if checking_message.id == match.group(1):
+                            if checking_message.id == match.group(1): 
                                 checking_message.add_line(line)
 
     def print_ids(self):
@@ -78,8 +91,8 @@ def main():
         message = a.messages[m]
         print('NEW MESSAGE \n\n\n')
         print(message.id)
-        for p in message.lines:
-            print(p)
+        for p in message.attributes:
+            print(p + "=" + str(message.attributes[p]))
 
 
 
