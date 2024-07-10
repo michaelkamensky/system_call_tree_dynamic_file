@@ -4,21 +4,18 @@ import re # needed parsing using regular expressions
 import subprocess # needed for reading the terminal so we can stop the process
 from collections import defaultdict
 
-# creating a data structure to keep track of the information that is being pasrsed
-class message():
+# now we need a lines class to keep track of each line there meta deta
 
-    def __init__(self, num, id):
+class line():
+    def __init__(self, id ,line):
         self.id = id
-        self.num = num
+        self.type = "none"
+        self.line = line
         self.attributes = defaultdict(list)
-        self.lines = []
-    
-    def add_line(self, line):
-        self.lines.append(line)
         self.parse_string_to_dict(line)
-
-    def get_id(self):
-        return id
+    
+    def __str__(self):
+        return self.line
     
     def parse_string_to_dict(self, input_string):
         # Regular expression to find key-value pairs
@@ -29,7 +26,27 @@ class message():
         
         # Iterate over the matches and populate the dictionary
         for key, value in matches:
-            self.attributes[key].append(value)
+            # need to catch the type stringand put it in a sperate category if type
+            if key == "type":
+                self.type = value
+            else:
+                self.attributes[key].append(value)
+
+# creating a data structure to keep track of the information that is being pasrsed
+class message():
+
+    def __init__(self, num, id):
+        self.id = id
+        self.num = num
+        self.lines = []
+    
+    def add_line(self, my_line):
+        self.lines.append(line(self.id, my_line))
+
+    def get_id(self):
+        return id
+    
+    
         
 class AuditLog():
 
@@ -86,13 +103,14 @@ def main():
     print(args.audit)
     print(args.out)
     a = AuditLog(args.audit)
-    # a.print_ids()
-    for m in a.messages:
-        message = a.messages[m]
-        print('NEW MESSAGE \n\n\n')
-        print(message.id)
-        for p in message.attributes:
-            print(p + "=" + str(message.attributes[p]))
+    m100 = a.messages[100] # AuditLogMessage
+    print(m100.id)
+    for p in m100.lines: # AuditLogLine
+        print(p.type)
+        print(p.attributes)
+        if p.type == "EXECVE":
+            if "argc" in p.attributes:
+                print(p.attributes["argc"])
 
 
 
