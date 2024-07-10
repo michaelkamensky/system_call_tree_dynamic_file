@@ -51,7 +51,7 @@ class message():
 class AuditLog():
 
     def __init__(self, file):
-        self.audit_id = []
+        self.audit_id = {}
         self.messages = {}
         # self.attributes = {}
         #lets parse the file based on the audit ID
@@ -60,16 +60,15 @@ class AuditLog():
                 match = re.search(r"msg=audit\((\d+\.\d+):(\d+)\):", line)
                 if match:
                     if str(match.group(1)) not in self.audit_id:
-                        self.audit_id.append(match.group(1))
-                        # if this is a new ID adding a new id and new message to dict
-                        m = message(len(self.audit_id), match.group(1))
+                        num = len(self.audit_id)
+                        self.audit_id[match.group(1)] = num
+                        m = message(num, match.group(1))
                         m.add_line(line)
-                        self.messages[len(self.audit_id)] = m
-                    else:
-                        for m in self.messages:
-                            checking_message = self.messages[m]
-                            if checking_message.id == match.group(1): 
-                                checking_message.add_line(line)
+                        self.messages[num] = m
+                    else: 
+                        num = self.audit_id[match.group(1)]
+                        num = self.messages[num]
+                        num.add_line(line)
 
     def print_ids(self):
         for id in self.audit_id:
@@ -103,6 +102,11 @@ def main():
     print(args.audit)
     print(args.out)
     a = AuditLog(args.audit)
+    #for m in a.messages:
+        #message = a.messages[m]
+        #print("new message \n\n\n")
+        #for l in message.lines:
+            #print(l)
     m100 = a.messages[100] # AuditLogMessage
     print(m100.id)
     for p in m100.lines: # AuditLogLine
