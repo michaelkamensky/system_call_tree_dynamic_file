@@ -4,6 +4,30 @@ import re # needed parsing using regular expressions
 import subprocess # needed for reading the terminal so we can stop the process
 from collections import defaultdict
 
+class Queue:
+    def __init__(self):
+        self.items = []
+
+    def is_empty(self):
+        return len(self.items) == 0
+
+    def enqueue(self, item):
+        self.items.append(item)
+
+    def dequeue(self):
+        if self.is_empty():
+            raise IndexError("Dequeue from an empty queue")
+        return self.items.pop(0)
+
+    def peek(self):
+        if self.is_empty():
+            raise IndexError("Peek from an empty queue")
+        return self.items[0]
+
+    def size(self):
+        return len(self.items)
+
+
 class TreeNode:
     def __init__(self, node_id):
         self.id = node_id
@@ -55,9 +79,22 @@ class Tree:
                 break
 
 
-    def breath_first_search(self):
-        print(self.root)
+    def breath_first_search(self, node):
+        if not self.root:
+            return []
 
+        queue = Queue()
+        queue.enqueue(self.root)
+        visited = []
+
+        while not queue.is_empty():
+            current_node = queue.dequeue()
+            visited.append(current_node.id)
+
+            for child in current_node.children:
+                queue.enqueue(child)
+
+        return visited
         
 
 
@@ -175,7 +212,9 @@ def main():
             if line.type == "SYSCALL" or line.type == "EXECVE":
                 tree.add_node(line.id, line.attributes['ppid'])
     tree.update_root()
-    tree.breath_first_search()
+    print(tree.root)
+    print(tree.root.children)
+    #print(tree.breath_first_search(tree.root))
 
                 
 
