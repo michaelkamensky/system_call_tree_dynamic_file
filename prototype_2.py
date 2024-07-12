@@ -28,55 +28,19 @@ class Queue:
         return len(self.items)
 
 
-class TreeNode:
-    def __init__(self, node_id):
-        self.id = node_id
-        self.parent = None
-        self.children = []
-        
-
-    def add_child(self, child_node):
-        self.children.append(child_node)
-        child_node.parent = self
-    
-    def set_parent(self, parent_id):
-        self.parent = parent_id
-    
-    def __str__(self):
-        return str(self.id[0])
-
 
 
 class Tree:
     def __init__(self):
-        self.nodes = {}
+        self.nodes = defaultdict(list)
         self.root = None
 
     def add_node(self, node_id, parent_id):
-        if node_id not in self.nodes:
-            node = TreeNode(node_id)
-            self.nodes[node_id] = node
-            #print(parent_id)
-            if len(parent_id) > 0:
-                if parent_id[0] not in self.nodes:
-                    parent_node = TreeNode(parent_id[0])
-                    parent_node.add_child(node)
-                    self.nodes[parent_id[0]] = parent_node
-                    node.set_parent(parent_id[0])
-                else:
-                    node.set_parent(parent_id[0])
-                    parent_node = self.nodes[parent_id[0]]
-                    parent_node.add_child(node)
-            else:
-                self.root = node 
-
-
+        if node_id not in self.nodes[parent_id[0]]:
+            self.nodes[parent_id[0]].append(node_id)
+        
     def update_root(self):
-        for n in self.nodes:
-            node = self.nodes[n]
-            if node.parent == None:
-                self.root = node
-                break
+        self.root = 1
 
 
     def breath_first_search(self, node):
@@ -213,7 +177,8 @@ def main():
                 tree.add_node(line.id, line.attributes['ppid'])
     tree.update_root()
     print(tree.root)
-    print(tree.root.children)
+    print(tree.nodes)
+    #print(tree.root.children[0])
     #print(tree.breath_first_search(tree.root))
 
                 
