@@ -3,6 +3,7 @@ import argparse
 import re # needed parsing using regular expressions
 import subprocess # needed for reading the terminal so we can stop the process
 from collections import defaultdict
+import copy
 
 class Queue:
     def __init__(self):
@@ -28,73 +29,25 @@ class Queue:
         return len(self.items)
 
 
-class TreeNode:
-    def __init__(self, node_id):
-        self.id = node_id
-        self.parent = None
-        self.children = []
+class SystemCall:
+    def __init__(self, message, type_num, pid, ppid):
+        self.message = message
+        self.pid = pid
+        self.ppid = ppid
+        self.syscall_num= type_num
         
-
-    def add_child(self, child_node):
-        self.children.append(child_node)
-        child_node.parent = self
+    def get_pid(self):
+        return self.pid
     
-    def set_parent(self, parent_id):
-        self.parent = parent_id
+    def get_ppid(self):
+        return self.ppid
     
-    def __str__(self):
-        return str(self.id[0])
+    def get_syscall_num(self):
+        return self.syscall_num
 
 
-
-class Tree:
-    def __init__(self):
-        self.nodes = {}
-        self.root = None
-
-    def add_node(self, node_id, parent_id):
-        if node_id not in self.nodes:
-            node = TreeNode(node_id)
-            self.nodes[node_id] = node
-            #print(parent_id)
-            if len(parent_id) > 0:
-                if parent_id[0] not in self.nodes:
-                    parent_node = TreeNode(parent_id[0])
-                    parent_node.add_child(node)
-                    self.nodes[parent_id[0]] = parent_node
-                    node.set_parent(parent_id[0])
-                else:
-                    node.set_parent(parent_id[0])
-                    parent_node = self.nodes[parent_id[0]]
-                    parent_node.add_child(node)
-            else:
-                self.root = node 
-
-
-    def update_root(self):
-        for n in self.nodes:
-            node = self.nodes[n]
-            if node.parent == None:
-                self.root = node
-                break
-
-
-    def breath_first_search(self, node):
-        if not self.root:
-            return []
-
-        queue = Queue()
-        queue.enqueue(self.root)
-        visited = []
-
-        while not queue.is_empty():
-            current_node = queue.dequeue()
-            visited.append(current_node.id)
-
-            for child in current_node.children:
-                queue.enqueue(child)
-
-        return visited
+# class Process:
+    
         
 
 
@@ -201,17 +154,24 @@ def main():
     #print(args.audit)
     #print(args.out)
     a = AuditLog(args.audit)
-    tree = Tree()
+    #tree = Tree()
 
     # now using this structure and a tree we will parse the audit log while also using a tree
     for m in a.messages:
         message = a.messages[m]
         #my_node = TreeNode(message.id)
-        print("new message here \n\n\n")
+        #print("new message here \n\n\n")
         for line in message.lines:
-            print(line)
-            #if line.type == "SYSCALL": # or line.type == "EXECVE":
+            #print(line)
+            if line.type == "SYSCALL": # or line.type == "EXECVE":
                 #tree.add_node(line.id, line.attributes['ppid'])
+                syscallnum = line.attributes['syscall']
+                my_syscall = SystemCall(message, syscallnum[0], line.attributes['pid'],
+                                        line.attributes['ppid'])
+                #print(my_syscall.get_syscall_num())
+                if my_syscall.get_syscall_num() == '56':
+                    print(line)
+                
                 #print(line)
     #ree.update_root()
     #print(tree.root)
