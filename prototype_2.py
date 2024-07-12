@@ -5,14 +5,21 @@ import subprocess # needed for reading the terminal so we can stop the process
 from collections import defaultdict
 
 class TreeNode:
-    def __init__(self, node_id, time):
+    def __init__(self, node_id):
         self.id = node_id
-        self.time = time
+        self.parent = None
         self.children = []
+        
 
     def add_child(self, child_node):
         self.children.append(child_node)
         child_node.parent = self
+    
+    def set_parent(self, parent_id):
+        self.parent = parent_id
+    
+    def __str__(self):
+        return str(self.id[0])
 
 
 
@@ -21,29 +28,35 @@ class Tree:
         self.nodes = {}
         self.root = None
 
-    def add_node(self, node_id, parent_id, time):
-        new_node = TreeNode(node_id, time)
+    def add_node(self, node_id, parent_id):
         if node_id not in self.nodes:
-            self.nodes[node_id] = new_node
-        else:
-            node_in_question = self.nodes[node_id]
-            if node_in_question.time > time or node_in_question.time == None:
-                node_in_question.time = time
-                new_node = node_in_question
-        if len(parent_id) > 0:
-            if parent_id[0] not in self.nodes:
-                parent_node_new =  TreeNode(parent_id, None)
-                self.nodes[parent_id[0]] = parent_node_new
-            parent_node = self.nodes[parent_id[0]]
-            parent_node.add_child(new_node)
+            node = TreeNode(node_id)
+            self.nodes[node_id] = node
+            #print(parent_id)
+            if len(parent_id) > 0:
+                if parent_id[0] not in self.nodes:
+                    parent_node = TreeNode(parent_id[0])
+                    parent_node.add_child(node)
+                    self.nodes[parent_id[0]] = parent_node
+                    node.set_parent(parent_id[0])
+                else:
+                    node.set_parent(parent_id[0])
+                    parent_node = self.nodes[parent_id[0]]
+                    parent_node.add_child(node)
+            else:
+                self.root = node 
 
 
     def update_root(self):
-        # Find the node that doesn't have a parent, this node is the root
-        for node in self.nodes.values():
-            if node.parent is None:
+        for n in self.nodes:
+            node = self.nodes[n]
+            if node.parent == None:
                 self.root = node
                 break
+
+
+    def breath_first_search(self):
+        print(self.root)
 
         
 
@@ -160,8 +173,9 @@ def main():
         #print("new message here \n\n\n")
         for line in message.lines:
             if line.type == "SYSCALL" or line.type == "EXECVE":
-                tree.add_node(line.id, line.attributes['ppid'], line.age)
-        tree.update_root()
+                tree.add_node(line.id, line.attributes['ppid'])
+    tree.update_root()
+    tree.breath_first_search()
 
                 
 
