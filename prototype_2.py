@@ -156,7 +156,7 @@ class AuditLog():
         #lets parse the file based on the audit ID
         with open(file, 'r') as infile:
             for line in infile:
-                match = re.search(r"pid=(\d+)", line)
+                match = re.search(r'msg=audit\(([^)]+)\)', line)
                 if match:
                     if str(match.group(0)) not in self.audit_id:
                         num = len(self.audit_id)
@@ -207,13 +207,15 @@ def main():
     for m in a.messages:
         message = a.messages[m]
         #my_node = TreeNode(message.id)
-        #print("new message here \n\n\n")
+        print("new message here \n\n\n")
         for line in message.lines:
-            if line.type == "SYSCALL" or line.type == "EXECVE":
-                tree.add_node(line.id, line.attributes['ppid'])
-    tree.update_root()
-    print(tree.root)
-    print(tree.root.children)
+            print(line)
+            #if line.type == "SYSCALL": # or line.type == "EXECVE":
+                #tree.add_node(line.id, line.attributes['ppid'])
+                #print(line)
+    #ree.update_root()
+    #print(tree.root)
+   # print(tree.root.children)
     #print(tree.breath_first_search(tree.root))
 
                 
