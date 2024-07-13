@@ -32,9 +32,9 @@ class Queue:
 class SystemCall:
     def __init__(self, message, type_num, pid, ppid):
         self.message = message
-        self.pid = pid
-        self.ppid = ppid
-        self.syscall_num= type_num
+        self.pid = int(pid)
+        self.ppid = int(ppid)
+        self.syscall_num= int(type_num)
         
     def get_pid(self):
         return self.pid
@@ -44,9 +44,30 @@ class SystemCall:
     
     def get_syscall_num(self):
         return self.syscall_num
+    
+    def are_we_clone(self):
+        if self.syscall_num == 56:
+            return True
+        else:
+            return False
 
 
-# class Process:
+class Process:
+
+    def __init__(self, pid):
+        self.parent = None
+        self.pid = pid
+        self.syscall = []
+        self.children = []
+
+    def add_syscall(self, syscall):
+        self.syscall.append(syscall)
+
+    def add_child(self, child):
+        self.children.append(child)
+    
+    def set_parent(self, parent):
+        self.parent = parent
     
         
 
@@ -155,6 +176,8 @@ def main():
     #print(args.out)
     a = AuditLog(args.audit)
     #tree = Tree()
+    process_dict = {}
+    bfot = []
 
     # now using this structure and a tree we will parse the audit log while also using a tree
     for m in a.messages:
@@ -165,18 +188,32 @@ def main():
             #print(line)
             if line.type == "SYSCALL": # or line.type == "EXECVE":
                 #tree.add_node(line.id, line.attributes['ppid'])
-                syscallnum = line.attributes['syscall']
-                my_syscall = SystemCall(message, syscallnum[0], line.attributes['pid'],
-                                        line.attributes['ppid'])
-                #print(my_syscall.get_syscall_num())
-                if my_syscall.get_syscall_num() == '56':
-                    print(line)
-                
-                #print(line)
-    #ree.update_root()
-    #print(tree.root)
-   # print(tree.root.children)
-    #print(tree.breath_first_search(tree.root))
+                my_syscall = SystemCall(message, line.attributes['syscall'][0], line.attributes['pid'][0],
+                                        line.attributes['ppid'][0])
+                if my_syscall.are_we_clone:
+                    # first we take care of the system call
+                    #print("my_syscall.get_pid() = " + str(my_syscall.get_pid()) + " my_syscall.get_ppid() ="+ str(my_syscall.get_ppid())  )
+                    if my_syscall.get_pid() not in process_dict:
+                        process = Process(my_syscall.get_pid())
+                        process.add_child(my_syscall)
+                        process_dict[my_syscall.get_pid()] = process
+                        # remove from boft since now the possible parent exists
+                    else:
+                        process = process_dict[my_syscall.get_pid()]
+                        process.add_child(my_syscall)
+                    # now we take care of the parent
+                    if my_syscall.get_ppid() in process_dict:
+                        if my_syscall.get_pid() in bfot:
+                            print("deletion ran")
+                            bfot.remove(my_syscall.get_pid())
+                        parent_process = process_dict[my_syscall.get_ppid()]
+                        my_syscall.set_parent = parent_process
+                    else:
+                        # there is a possible before our time here we got to acoount for that
+                        if my_syscall.get_ppid() not in bfot:
+                            bfot.append(int(my_syscall.get_ppid()))
+
+
 
                 
 
