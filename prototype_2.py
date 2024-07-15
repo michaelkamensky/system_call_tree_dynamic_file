@@ -95,8 +95,9 @@ class line():
         return self.line
     
     def are_we_clone(self):
-        if self.attributes['syscall'] == '56':
-            return True
+        if len(self.attributes['syscall']) > 0:
+            if self.attributes['syscall'][0] == '56':
+                return True
         else:
             return False
     
@@ -170,17 +171,20 @@ class AuditLog():
 def convert_message(message):
     return_string = ""
     for line in message.lines:
-        if line.are_we_clone:
-            return_string += "pid = " + line.attributes['pid'] + ": CLONE at " + line.id
+        #print(type(line))
+        if line.are_we_clone():
+            #print(line.attributes['pid'])
+            return_string += "pid = " + line.attributes['pid'][0] + ": CLONE at " + line.id
+    if len(return_string) > 0:
+        return return_string
 
 
 def depth_first_search(root, dict):
     for r in root:
         my_process = dict[r]
         for syscall in my_process.get_syscalls():
-            print(syscall, end =" ")
-        print()
-        
+            #print(syscall)
+            print(convert_message(syscall.message))
 
     
 #os.system('sudo aureport --syscall')
@@ -213,7 +217,7 @@ def main():
                 #tree.add_node(line.id, line.attributes['ppid'])
                 my_syscall = SystemCall(message, line.attributes['syscall'][0], line.attributes['pid'][0],
                                         line.attributes['ppid'][0])
-                if my_syscall.are_we_clone:
+                if my_syscall.are_we_clone():
                     # first we take care of the system call
                     #print("my_syscall.get_pid() = " + str(my_syscall.get_pid()) + " my_syscall.get_ppid() ="+ str(my_syscall.get_ppid())  )
                     if my_syscall.get_pid() not in process_dict:
