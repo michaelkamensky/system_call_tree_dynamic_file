@@ -50,6 +50,9 @@ class SystemCall:
             return True
         else:
             return False
+    
+    def __str__(self):
+        return str(self.message)
 
 
 class Process:
@@ -68,10 +71,14 @@ class Process:
     
     def set_parent(self, parent):
         self.parent = parent
+
+    def get_syscalls(self):
+        return self.syscall
+    
+    def get_children(self):
+        return self.children
     
         
-
-
 
 # now we need a lines class to keep track of each line there meta deta
 
@@ -86,6 +93,12 @@ class line():
     
     def __str__(self):
         return self.line
+    
+    def are_we_clone(self):
+        if self.attributes['syscall'] == '56':
+            return True
+        else:
+            return False
     
     def parse_string_to_dict(self, input_string):
         match = re.search(r"msg=audit\((\d+\.\d+):(\d+)\):", input_string)
@@ -119,6 +132,12 @@ class message():
     def get_id(self):
         return id
     
+    def __str__(self):
+        return_string = ''
+        for l in self.lines:
+            return_string += str(l)
+        return return_string
+    
     
         
 class AuditLog():
@@ -146,19 +165,22 @@ class AuditLog():
     def print_ids(self):
         for id in self.audit_id:
             print(id)
-    
-    
 
-#os.system('sudo auditd start')
-#os.system('sudo auditctl -r 1000')
-#os.system('touch tree_audit_process.txt')
-#os.system('sudo auditctl -S fork')
-#os.system('sudo auditctl -a always,exit -F arch=b64 -S clone -k clone_syscall')
-#os.system('sudo less /var/log/audit/audit.log > dynamic_autilog.txt'
+# converts a message into a printable form
+def convert_message(message):
+    return_string = ""
+    for line in message.lines:
+        if line.are_we_clone:
+            return_string += "pid = " + line.attributes['pid'] + ": CLONE at " + line.id
 
-#parse_file('dynamic_autilog.txt', 'tree_audit_process.txt')
-#while (input() != "^C"):
-    # we need some code to help break out of this loop
+
+def depth_first_search(root, dict):
+    for r in root:
+        my_process = dict[r]
+        for syscall in my_process.get_syscalls():
+            print(syscall, end =" ")
+        print()
+        
 
     
 #os.system('sudo aureport --syscall')
@@ -177,6 +199,7 @@ def main():
     a = AuditLog(args.audit)
     #tree = Tree()
     process_dict = {}
+    roots = []
     bfot = []
 
     # now using this structure and a tree we will parse the audit log while also using a tree
@@ -195,23 +218,25 @@ def main():
                     #print("my_syscall.get_pid() = " + str(my_syscall.get_pid()) + " my_syscall.get_ppid() ="+ str(my_syscall.get_ppid())  )
                     if my_syscall.get_pid() not in process_dict:
                         process = Process(my_syscall.get_pid())
-                        process.add_child(my_syscall)
+                        process.add_syscall(my_syscall)
                         process_dict[my_syscall.get_pid()] = process
                         # remove from boft since now the possible parent exists
                     else:
                         process = process_dict[my_syscall.get_pid()]
-                        process.add_child(my_syscall)
+                        process.add_syscall(my_syscall)
                     # now we take care of the parent
                     if my_syscall.get_ppid() in process_dict:
                         if my_syscall.get_pid() in bfot:
-                            print("deletion ran")
                             bfot.remove(my_syscall.get_pid())
                         parent_process = process_dict[my_syscall.get_ppid()]
-                        my_syscall.set_parent = parent_process
+                        parent_process.add_child(process)
+                        process.set_parent(parent_process)
                     else:
                         # there is a possible before our time here we got to acoount for that
-                        if my_syscall.get_ppid() not in bfot:
-                            bfot.append(int(my_syscall.get_ppid()))
+                        if my_syscall.get_ppid() not in process_dict and my_syscall.get_ppid() not in bfot:
+                            bfot.append(my_syscall.get_ppid())
+                            roots.append(my_syscall.get_pid())
+    depth_first_search(roots, process_dict)
 
 
 
