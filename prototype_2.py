@@ -16,17 +16,10 @@ class Queue:
         self.items.append(item)
 
     def dequeue(self):
-        if self.is_empty():
+        if not self.is_empty():
+            return self.items.pop(0)
+        else:
             raise IndexError("Dequeue from an empty queue")
-        return self.items.pop(0)
-
-    def peek(self):
-        if self.is_empty():
-            raise IndexError("Peek from an empty queue")
-        return self.items[0]
-
-    def size(self):
-        return len(self.items)
 
 
 class SystemCall:
@@ -77,6 +70,9 @@ class Process:
     
     def get_children(self):
         return self.children
+    
+    def __str__(self):
+        return str(self.pid)
     
         
 
@@ -178,13 +174,28 @@ def convert_message(message):
     if len(return_string) > 0:
         return return_string
 
+def breath_first_search(root):
+        
+    queue = Queue()
+    queue.enqueue(root)
+    result = []
+        
+    while not queue.is_empty():
+        process = queue.dequeue()
+        result.append(str(process))
+        for child in process.get_children():
+            queue.enqueue(child)
+        
+    return result
 
-def depth_first_search(root, dict):
+def print_out_trees(root, dict):
     for r in root:
         my_process = dict[r]
-        for syscall in my_process.get_syscalls():
-            #print(syscall)
-            print(convert_message(syscall.message))
+        #print(my_process)
+        print('\n the parent is = ' + str(my_process))
+        print(breath_first_search(my_process))
+
+
 
     
 #os.system('sudo aureport --syscall')
@@ -236,11 +247,11 @@ def main():
                         parent_process.add_child(process)
                         process.set_parent(parent_process)
                     else:
-                        # there is a possible before our time here we got to acoount for that
+                        # there is a possible before our time here we got to account for that
                         if my_syscall.get_ppid() not in process_dict and my_syscall.get_ppid() not in bfot:
                             bfot.append(my_syscall.get_ppid())
                             roots.append(my_syscall.get_pid())
-    depth_first_search(roots, process_dict)
+    print_out_trees(roots, process_dict)
 
 
 
