@@ -43,6 +43,9 @@ class SystemCall:
             return True
         else:
             return False
+        
+    def get_message(self):
+        return self.message
     
     def __str__(self):
         return str(self.message)
@@ -179,14 +182,19 @@ def breath_first_search(root):
     queue = Queue()
     queue.enqueue(root)
     result = []
-        
+    num=0
+
     while not queue.is_empty():
         process = queue.dequeue()
-        result.append(str(process))
+        num += 1
+        for syscall in process.get_syscalls():
+            #result.append(convert_message(syscall.get_message()))
+            print('<'+ str(num) + '>' + convert_message(syscall.get_message()))
+        print("\n\n\n")
         for child in process.get_children():
             queue.enqueue(child)
         
-    return result
+    #return result
 
 def print_out_trees(root, dict):
     for r in root:
