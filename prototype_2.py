@@ -203,24 +203,7 @@ def print_out_trees(root, dict):
         print('\n the parent is = ' + str(my_process))
         print(breath_first_search(my_process))
 
-
-
-    
-#os.system('sudo aureport --syscall')
-#os.system('auditd status')
-def main():
-    parser = argparse.ArgumentParser(
-                        prog='prtotype_1',
-                        description='Create process tree report from given audit log')
-    
-    parser.add_argument('-a', '--audit', dest='audit', required=True, metavar='FILE')          # positional argument
-    parser.add_argument('-o', '--outfile', dest='out', required=True, metavar='FILE')
-    #parser.add_argument('filename')           # positional argument
-    args = parser.parse_args()
-    #print(args.audit)
-    #print(args.out)
-    a = AuditLog(args.audit)
-    #tree = Tree()
+def create_file(a):
     process_dict = {}
     roots = []
     bfot = []
@@ -261,11 +244,22 @@ def main():
                             roots.append(my_syscall.get_pid())
     print_out_trees(roots, process_dict)
 
-
-
-                
-
-
+    
+#os.system('sudo aureport --syscall')
+#os.system('auditd status')
+def main():
+    parser = argparse.ArgumentParser(
+                        prog='prtotype_1',
+                        description='Create process tree report from given audit log')
+    
+    parser.add_argument('-a', '--audit', dest='audit', required=True, metavar='FILE')          # positional argument
+    parser.add_argument('-o', '--outfile', dest='out', required=True, metavar='FILE')
+    #parser.add_argument('filename')           # positional argument
+    args = parser.parse_args()
+    #print(args.audit)
+    #print(args.out)
+    a = AuditLog(args.audit)
+    create_file(a)
 
 
 
