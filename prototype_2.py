@@ -21,6 +21,21 @@ class Queue:
         else:
             raise IndexError("Dequeue from an empty queue")
 
+class Stack:
+    def __init__(self):
+        self.items = []
+
+    def is_empty(self):
+        return len(self.items) == 0
+
+    def push(self, item):
+        self.items.append(item)
+
+    def pop(self):
+        if not self.is_empty():
+            return self.items.pop()
+        else:
+            raise IndexError("Pop from an empty stack")
 
 class SystemCall:
     def __init__(self, message, type_num, pid, ppid):
@@ -190,11 +205,25 @@ def breath_first_search(root):
         for syscall in process.get_syscalls():
             #result.append(convert_message(syscall.get_message()))
             print('<'+ str(num) + '>' + convert_message(syscall.get_message()))
-        print("\n\n\n")
-        for child in process.get_children():
-            queue.enqueue(child)
+
+        #for child in process.get_children():
+            #queue.enqueue(child)
         
     #return result
+
+def depth_first_search(root):
+    stack = Stack()
+    stack.push(root)
+    result = []
+        
+    while not stack.is_empty():
+        process = stack.pop()
+        #result.append(node.value)
+        # Add children to stack in reverse order to maintain correct order in DFS
+        for child in reversed(node.children):
+            stack.push(child)
+        
+    return result
 
 def print_out_trees(root, dict):
     for r in root:
