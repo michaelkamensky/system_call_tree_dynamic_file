@@ -38,8 +38,8 @@ class Stack:
             raise IndexError("Pop from an empty stack")
 
 class SystemCall:
-    def __init__(self, message, type_num, pid, ppid):
-        self.message = message
+    def __init__(self, line, type_num, pid, ppid):
+        self.message = line
         self.pid = int(pid)
         self.ppid = int(ppid)
         self.syscall_num= int(type_num)
@@ -58,7 +58,11 @@ class SystemCall:
             return True
         else:
             return False
-        
+    
+    def get_clone_id(self):
+        if self.are_we_clone():
+            return int(self.message.attributes['exit'][0])
+
     def get_message(self):
         return self.message
     
@@ -76,6 +80,9 @@ class Process:
 
     def add_syscall(self, syscall):
         self.syscall.append(syscall)
+    
+    def get_pid(self):
+        return self.pid
 
     def add_child(self, child):
         self.children.append(child)
@@ -236,6 +243,7 @@ def create_file(a):
     process_dict = {}
     roots = []
     bfot = []
+    num_proccess = 0
 
     # now using this structure and a tree we will parse the audit log while also using a tree
     for m in a.messages:
@@ -246,32 +254,44 @@ def create_file(a):
             #print(line)
             if line.type == "SYSCALL": # or line.type == "EXECVE":
                 #tree.add_node(line.id, line.attributes['ppid'])
-                my_syscall = SystemCall(message, line.attributes['syscall'][0], line.attributes['pid'][0],
+                my_syscall = SystemCall(line, line.attributes['syscall'][0], line.attributes['pid'][0],
                                         line.attributes['ppid'][0])
                 if my_syscall.are_we_clone():
-                    # first we take care of the system call
-                    #print("my_syscall.get_pid() = " + str(my_syscall.get_pid()) + " my_syscall.get_ppid() ="+ str(my_syscall.get_ppid())  )
+                    #print('process correctly made')
+                    # if there is a clone a new process is created now we handle its logic
+                    # if there is a clone a new process MUST Be created
+                    my_process = Process(my_syscall.get_clone_id())
+                    num_proccess += 1
+                    # adding the process to the dict
+                    process_dict[my_process.get_pid()] = my_process
+                    # now to the process has been added to the dicts
+                    # take care of any parental relationships
+                    if my_syscall.get_pid() in process_dict:
+                        parent_process = process_dict[my_syscall.get_pid()]
+                        # now establish the relationships
+                        parent_process.add_child(my_process)
+                        parent_process.add_syscall(my_syscall)
+                        my_process.set_parent(parent_process)
+                else:
+                    #this is not a clone system call but we still need to add it to the right process
+                    # there is a case for bfot where audit is not aware of a process
                     if my_syscall.get_pid() not in process_dict:
-                        process = Process(my_syscall.get_pid())
-                        process.add_syscall(my_syscall)
-                        process_dict[my_syscall.get_pid()] = process
-                        # remove from boft since now the possible parent exists
+                        # there has yet to be a clone this is a root process
+                        #print('this ran')
+                        root_process = Process(my_syscall.get_pid())
+                        num_proccess += 1
+                        process_dict[root_process.get_pid()] = root_process
+                        root_process.set_parent(my_syscall.get_ppid())
+                        root_process.add_syscall(my_syscall)
+                        roots.append(root_process)
+                        bfot.append(my_syscall.get_ppid())
                     else:
-                        process = process_dict[my_syscall.get_pid()]
-                        process.add_syscall(my_syscall)
-                    # now we take care of the parent
-                    if my_syscall.get_ppid() in process_dict:
-                        if my_syscall.get_pid() in bfot:
-                            bfot.remove(my_syscall.get_pid())
-                        parent_process = process_dict[my_syscall.get_ppid()]
-                        parent_process.add_child(process)
-                        process.set_parent(parent_process)
-                    else:
-                        # there is a possible before our time here we got to account for that
-                        if my_syscall.get_ppid() not in process_dict and my_syscall.get_ppid() not in bfot:
-                            bfot.append(my_syscall.get_ppid())
-                            roots.append(my_syscall.get_pid())
-    print_out_trees(roots, process_dict)
+                        # the process does exist we need to add the syscall to it
+                        my_process = process_dict[my_syscall.get_pid()]
+                        my_process.add_syscall(my_syscall)
+    print(len(bfot))
+    print(num_proccess)
+    #print_out_trees(roots, process_dict)
 
     
 #os.system('sudo aureport --syscall')
