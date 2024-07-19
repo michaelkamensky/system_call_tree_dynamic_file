@@ -275,9 +275,11 @@ def create_file(a):
                 else:
                     #this is not a clone system call but we still need to add it to the right process
                     # there is a case for bfot where audit is not aware of a process
+                    print('pid = ' + str(my_syscall.get_pid()))
+                    print(process_dict.keys())
                     if my_syscall.get_pid() not in process_dict:
                         # there has yet to be a clone this is a root process
-                        #print('this ran')
+                        print('we went in')
                         root_process = Process(my_syscall.get_pid())
                         num_proccess += 1
                         process_dict[my_syscall.get_pid()] = root_process
@@ -290,10 +292,10 @@ def create_file(a):
                         # the process does exist we need to add the syscall to it
                         my_process = process_dict[my_syscall.get_pid()]
                         my_process.add_syscall(my_syscall)
-    print('bfot len = ' + str(len(bfot)))
-    print('roots len = ' + str(len(roots)))
-    print('number of processes = ' + str(num_proccess))
-    print(bfot)
+    #print('bfot len = ' + str(len(bfot)))
+    #print('roots len = ' + str(len(roots)))
+    #print('number of processes = ' + str(num_proccess))
+    #print(bfot)
     #print_out_trees(roots, process_dict)
 
     
