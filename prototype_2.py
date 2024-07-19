@@ -280,17 +280,20 @@ def create_file(a):
                         #print('this ran')
                         root_process = Process(my_syscall.get_pid())
                         num_proccess += 1
-                        process_dict[root_process.get_pid()] = root_process
+                        process_dict[my_syscall.get_pid()] = root_process
                         root_process.set_parent(my_syscall.get_ppid())
                         root_process.add_syscall(my_syscall)
                         roots.append(root_process)
-                        bfot.append(my_syscall.get_ppid())
+                        if int(my_syscall.get_pid()) not in bfot:
+                            bfot.append(int(my_syscall.get_ppid()))
                     else:
                         # the process does exist we need to add the syscall to it
                         my_process = process_dict[my_syscall.get_pid()]
                         my_process.add_syscall(my_syscall)
-    print(len(bfot))
-    print(num_proccess)
+    print('bfot len = ' + str(len(bfot)))
+    print('roots len = ' + str(len(roots)))
+    print('number of processes = ' + str(num_proccess))
+    print(bfot)
     #print_out_trees(roots, process_dict)
 
     
