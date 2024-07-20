@@ -38,8 +38,9 @@ class Stack:
             raise IndexError("Pop from an empty stack")
 
 class SystemCall:
-    def __init__(self, line, type_num, pid, ppid):
-        self.message = line
+    def __init__(self, line, type_num, pid, ppid, message):
+        self.line = line
+        self.message = message 
         self.pid = int(pid)
         self.ppid = int(ppid)
         self.syscall_num= int(type_num)
@@ -61,10 +62,13 @@ class SystemCall:
     
     def get_clone_id(self):
         if self.are_we_clone():
-            return int(self.message.attributes['exit'][0])
+            return int(self.line.attributes['exit'][0])
 
     def get_message(self):
         return self.message
+    
+    def get_line(self):
+        return self.line
     
     def __str__(self):
         return str(self.message)
@@ -215,7 +219,7 @@ def print_out_trees(process, level):
             if syscall.are_we_clone():
                 for x in range(level):
                     print("  ", end="")
-                print("<" + str(level) + "> " + convert_line(syscall.get_message()))
+                print("<" + str(level) + "> " + convert_line(syscall.get_line()))
                 # the message has now been printed we need to go to the next one
                 for child in process.get_children():
                     if child.get_pid() == syscall.get_clone_id():
@@ -241,7 +245,7 @@ def create_file(a):
             if line.type == "SYSCALL": # or line.type == "EXECVE":
                 #tree.add_node(line.id, line.attributes['ppid'])
                 my_syscall = SystemCall(line, line.attributes['syscall'][0], line.attributes['pid'][0],
-                                        line.attributes['ppid'][0])
+                                        line.attributes['ppid'][0], message)
                 if my_syscall.are_we_clone():
                     #print('process correctly made')
                     # if there is a clone a new process is created now we handle its logic
