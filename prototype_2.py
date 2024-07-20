@@ -51,6 +51,9 @@ class SystemCall:
     def get_ppid(self):
         return self.ppid
     
+    def get_audit_id(self):
+        return self.line.id
+    
     def get_syscall_num(self):
         return self.syscall_num
     
@@ -215,6 +218,7 @@ def convert_line(line):
 
 def print_out_trees(process, level):
         # now we got throught the system calls
+        print("")
         for syscall in process.get_syscalls():
             if syscall.are_we_clone():
                 for x in range(level):
@@ -223,10 +227,20 @@ def print_out_trees(process, level):
                 # the message has now been printed we need to go to the next one
                 for child in process.get_children():
                     if child.get_pid() == syscall.get_clone_id():
+                        # before we branch of we need to print the other messages
+                        # now we get the audit id
                         print_out_trees(child, (level+1))
+            else:
+                # this is not a clone and holds all the execute instances
+                message = syscall.get_message()
+                for line in message.lines:
+                    if line.type == 'EXECVE':
+                        for x in range(level):
+                            print("  ", end="")
+                        print("<" + str(level) + "> pid = " + str(syscall.get_pid()) + ": EXECVE at " + line.id)
+            
 
 
-        # now we have the first process now we have to move down it
 
 
 def create_file(a):
