@@ -199,45 +199,31 @@ def convert_message(message):
     if len(return_string) > 0:
         return return_string
 
-def breath_first_search(root):
-        
-    queue = Queue()
-    queue.enqueue(root)
-    result = []
-    num=0
+def convert_line(line):
+    return_string = ""
+    if line.are_we_clone():
+        #print(line.attributes['pid'])
+        return_string = "pid = " + line.attributes['pid'][0] + ": CLONE at " + line.id
+    if len(return_string) > 0:
+        return return_string
 
-    while not queue.is_empty():
-        process = queue.dequeue()
-        num += 1
+
+
+def print_out_trees(process, level):
+        # now we got throught the system calls
         for syscall in process.get_syscalls():
-            #result.append(convert_message(syscall.get_message()))
-            print('<'+ str(num) + '>' + convert_message(syscall.get_message()))
+            if syscall.are_we_clone():
+                for x in range(level):
+                    print("  ", end="")
+                print("<" + str(level) + "> " + convert_line(syscall.get_message()))
+                # the message has now been printed we need to go to the next one
+                for child in process.get_children():
+                    if child.get_pid() == syscall.get_clone_id():
+                        print_out_trees(child, (level+1))
 
-        #for child in process.get_children():
-            #queue.enqueue(child)
-        
-    #return result
 
-def depth_first_search(root):
-    stack = Stack()
-    stack.push(root)
-    result = []
-        
-    while not stack.is_empty():
-        process = stack.pop()
-        #result.append(node.value)
-        # Add children to stack in reverse order to maintain correct order in DFS
-        for child in reversed(node.children):
-            stack.push(child)
-        
-    return result
+        # now we have the first process now we have to move down it
 
-def print_out_trees(root, dict):
-    for r in root:
-        my_process = dict[r]
-        #print(my_process)
-        print('\n the parent is = ' + str(my_process))
-        print(breath_first_search(my_process))
 
 def create_file(a):
     process_dict = {}
@@ -292,12 +278,13 @@ def create_file(a):
                         # the process does exist we need to add the syscall to it
                         my_process = process_dict[my_syscall.get_pid()]
                         my_process.add_syscall(my_syscall)
-    print('bfot len = ' + str(len(bfot)))
-    print('roots len = ' + str(len(roots)))
-    print('number of processes = ' + str(num_proccess))
-    print(bfot)
+    #print('bfot len = ' + str(len(bfot)))
+    #print('roots len = ' + str(len(roots)))
+    #print('number of processes = ' + str(num_proccess))
+    #print(bfot)
     #print_out_trees(roots, process_dict)
-
+    for r in roots:
+        print_out_trees(r, 0)
     
 #os.system('sudo aureport --syscall')
 #os.system('auditd status')
