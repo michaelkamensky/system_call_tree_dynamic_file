@@ -215,35 +215,36 @@ def convert_line(line):
         return return_string
 
 
-
-def print_out_trees(process, level):
+def print_out_trees(process, level, outfile):
         # now we got throught the system calls
-        print("")
+        outfile.write("\n")
         for syscall in process.get_syscalls():
             if syscall.are_we_clone():
                 for x in range(level):
-                    print("  ", end="")
-                print("<" + str(level) + "> " + convert_line(syscall.get_line()))
+                    outfile.write("  ")
+                outfile.write("<" + str(level) + "> " + convert_line(syscall.get_line()) + "\n")
                 # the message has now been printed we need to go to the next one
                 for child in process.get_children():
                     if child.get_pid() == syscall.get_clone_id():
                         # before we branch of we need to print the other messages
                         # now we get the audit id
-                        print_out_trees(child, (level+1))
+
+                        print_out_trees(child, (level+1), outfile)
+                        outfile.write("\n")
             else:
                 # this is not a clone and holds all the execute instances
                 message = syscall.get_message()
                 for line in message.lines:
                     if line.type == 'EXECVE':
                         for x in range(level):
-                            print("  ", end="")
-                        print("<" + str(level) + "> pid = " + str(syscall.get_pid()) + ": EXECVE at " + line.id)
+                            outfile.write("  ")
+                        outfile.write("<" + str(level) + "> pid = " + str(syscall.get_pid()) + ": EXECVE at " + line.id + "\n")
             
 
 
 
 
-def create_file(a):
+def create_file(a, outfile):
     process_dict = {}
     roots = []
     bfot = []
@@ -302,7 +303,7 @@ def create_file(a):
     #print(bfot)
     #print_out_trees(roots, process_dict)
     for r in roots:
-        print_out_trees(r, 0)
+        print_out_trees(r, 0, outfile)
     
 #os.system('sudo aureport --syscall')
 #os.system('auditd status')
@@ -318,7 +319,8 @@ def main():
     #print(args.audit)
     #print(args.out)
     a = AuditLog(args.audit)
-    create_file(a)
+    file = open(args.out, "w")
+    create_file(a, file)
 
 
 
